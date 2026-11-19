@@ -1,0 +1,2735 @@
+{
+  "info": {
+    "name": "API Catálogo y Favoritos",
+    "description": "Pruebas de la API REST de catálogo y favoritos. Ejecutar las carpetas 01 a 09 en orden; luego reiniciar el servidor y ejecutar la 10.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 Autenticación",
+      "item": [
+        {
+          "name": "Registro usuario A (201, rol siempre usuario)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "Se envía \"rol\": \"admin\" a propósito: el servidor lo ignora y crea un usuario normal.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario A\",\n  \"correo\": \"{{correoA}}\",\n  \"password\": \"{{passwordUsuarios}}\",\n  \"rol\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('correoA', `usuario.a.${Date.now()}@catalogo.test`);",
+                  "if (!pm.environment.get('passwordUsuarios')) pm.environment.set('passwordUsuarios', 'ClaveDePrueba123');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "const u = pm.response.json().data;",
+                  "pm.test('Rol asignado es usuario aunque se pidió admin', () => pm.expect(u.rol).to.eql('usuario'));",
+                  "pm.test('Correo correcto', () => pm.expect(u.correo).to.eql(pm.environment.get('correoA')));",
+                  "pm.test('No expone contraseña ni hash', () => {",
+                  "  const t = pm.response.text();",
+                  "  pm.expect(t).to.not.include('password');",
+                  "  pm.expect(t).to.not.include('$2');",
+                  "});",
+                  "pm.environment.set('usuarioAId', u.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registro usuario B (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario B\",\n  \"correo\": \"{{correoB}}\",\n  \"password\": \"{{passwordUsuarios}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('correoB', `usuario.b.${Date.now()}@catalogo.test`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('usuarioBId', pm.response.json().data.id);",
+                  "pm.test('No expone contraseña ni hash', () => {",
+                  "  const t = pm.response.text();",
+                  "  pm.expect(t).to.not.include('password');",
+                  "  pm.expect(t).to.not.include('$2');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registro con correo duplicado (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Otra persona\",\n  \"correo\": \"{{correoA}}\",\n  \"password\": \"OtraClave123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Error con código CORREO_DUPLICADO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('CORREO_DUPLICADO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registro con correo inválido y campos vacíos (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\",\n  \"correo\": \"no-es-correo\",\n  \"password\": \"123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});",
+                  "pm.test('Indica los tres campos con error', () => {",
+                  "  const campos = pm.response.json().error.detalles.map(d => d.campo);",
+                  "  pm.expect(campos).to.include.members(['nombre','correo','password']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login usuario A (200, JWT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoA}}\",\n  \"password\": \"{{passwordUsuarios}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('Devuelve token JWT con vencimiento', () => {",
+                  "  pm.expect(d.token.split('.')).to.have.lengthOf(3);",
+                  "  const payload = JSON.parse(atob(d.token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));",
+                  "  pm.expect(payload.exp).to.be.above(payload.iat);",
+                  "  pm.expect(payload.rol).to.eql('usuario');",
+                  "});",
+                  "pm.test('No expone contraseña ni hash', () => {",
+                  "  const t = pm.response.text();",
+                  "  pm.expect(t).to.not.include('password');",
+                  "  pm.expect(t).to.not.include('$2');",
+                  "});",
+                  "pm.environment.set('tokenA', d.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login usuario B (200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoB}}\",\n  \"password\": \"{{passwordUsuarios}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.set('tokenB', pm.response.json().data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login administrador (200, rol admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Requiere haber ejecutado npm run crear-admin y tener adminCorreo/adminPassword en el entorno local.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('El usuario es admin', () => pm.expect(d.usuario.rol).to.eql('admin'));",
+                  "pm.environment.set('tokenAdmin', d.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login con contraseña incorrecta (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoA}}\",\n  \"password\": \"ClaveEquivocada999\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error con código CREDENCIALES_INVALIDAS y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('CREDENCIALES_INVALIDAS');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});",
+                  "pm.test('No devuelve token', () => pm.expect(pm.response.json().data).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login con correo no registrado (401, mismo mensaje)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"nadie@catalogo.test\",\n  \"password\": \"Cualquiera123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error con código CREDENCIALES_INVALIDAS y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('CREDENCIALES_INVALIDAS');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Catálogo público (sin token)",
+      "item": [
+        {
+          "name": "Listar productos (200, al menos 5)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Al menos 5 productos', () => pm.expect(j.data.length).to.be.at.least(5));",
+                  "pm.test('total coincide', () => pm.expect(j.total).to.eql(j.data.length));",
+                  "const p = j.data[0];",
+                  "pm.test('Tiene los campos de un producto', () => {",
+                  "  pm.expect(p).to.include.keys('id','nombre','descripcion','categoria','precio');",
+                  "  pm.expect(p.precio).to.be.above(0);",
+                  "});",
+                  "pm.environment.set('productoExistenteId', p.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtrar por categoría libros (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos?categoria=libros",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ],
+              "query": [
+                {
+                  "key": "categoria",
+                  "value": "libros"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Hay resultados', () => pm.expect(j.data.length).to.be.above(0));",
+                  "pm.test('Todos son de la categoría libros', () => j.data.forEach(p => pm.expect(p.categoria).to.eql('libros')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtrar por categoría inexistente (200, lista vacía)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos?categoria=juguetes-espaciales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ],
+              "query": [
+                {
+                  "key": "categoria",
+                  "value": "juguetes-espaciales"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Lista vacía', () => pm.expect(pm.response.json().data).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar un producto (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoExistenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoExistenteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "const p = pm.response.json().data;",
+                  "pm.test('Tiene los campos de un producto', () => {",
+                  "  pm.expect(p).to.include.keys('id','nombre','descripcion','categoria','precio');",
+                  "  pm.expect(p.precio).to.be.above(0);",
+                  "});",
+                  "pm.test('Es el id pedido', () => pm.expect(p.id).to.eql(Number(pm.environment.get('productoExistenteId'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar producto inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar con id no numérico (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "abc"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error con código ID_INVALIDO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('ID_INVALIDO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Productos CRUD (administrador)",
+      "item": [
+        {
+          "name": "Crear producto (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Ergonómico Vega\",\n  \"descripcion\": \"Mouse inalámbrico vertical de prueba.\",\n  \"categoria\": \"electronica\",\n  \"precio\": 129900\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "const p = pm.response.json().data;",
+                  "pm.test('Tiene los campos de un producto', () => {",
+                  "  pm.expect(p).to.include.keys('id','nombre','descripcion','categoria','precio');",
+                  "  pm.expect(p.precio).to.be.above(0);",
+                  "});",
+                  "pm.test('Guarda los datos enviados', () => { pm.expect(p.nombre).to.eql('Mouse Ergonómico Vega'); pm.expect(p.precio).to.eql(129900); });",
+                  "pm.environment.set('productoCrudId', p.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar producto creado (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoCrudId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mismo nombre', () => pm.expect(pm.response.json().data.nombre).to.eql('Mouse Ergonómico Vega'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar producto (200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoCrudId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Ergonómico Vega Pro\",\n  \"descripcion\": \"Mouse inalámbrico vertical de prueba.\",\n  \"categoria\": \"electronica\",\n  \"precio\": 149900.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "const p = pm.response.json().data;",
+                  "pm.test('Cambios aplicados', () => { pm.expect(p.nombre).to.eql('Mouse Ergonómico Vega Pro'); pm.expect(p.precio).to.eql(149900.5); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar producto inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "999999"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Ergonómico Vega\",\n  \"descripcion\": \"Mouse inalámbrico vertical de prueba.\",\n  \"categoria\": \"electronica\",\n  \"precio\": 129900\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar producto (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoCrudId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));",
+                  "pm.test('Sin cuerpo', () => pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar producto eliminado (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoCrudId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar producto inexistente (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoCrudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoCrudId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Validaciones de productos",
+      "item": [
+        {
+          "name": "Crear con precio 0 (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Ergonómico Vega\",\n  \"descripcion\": \"Mouse inalámbrico vertical de prueba.\",\n  \"categoria\": \"electronica\",\n  \"precio\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});",
+                  "pm.test('El error es del precio', () => pm.expect(pm.response.json().error.detalles[0].campo).to.eql('precio'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear con precio negativo (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Ergonómico Vega\",\n  \"descripcion\": \"Mouse inalámbrico vertical de prueba.\",\n  \"categoria\": \"electronica\",\n  \"precio\": -5000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear con precio como texto (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Ergonómico Vega\",\n  \"descripcion\": \"Mouse inalámbrico vertical de prueba.\",\n  \"categoria\": \"electronica\",\n  \"precio\": \"gratis\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear con campos vacíos (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\",\n  \"descripcion\": \"   \",\n  \"categoria\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});",
+                  "pm.test('Reporta los 4 campos', () => {",
+                  "  const campos = pm.response.json().error.detalles.map(d => d.campo);",
+                  "  pm.expect(campos).to.have.members(['nombre','descripcion','categoria','precio']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar con precio inválido (422)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoExistenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoExistenteId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Ergonómico Vega\",\n  \"descripcion\": \"Mouse inalámbrico vertical de prueba.\",\n  \"categoria\": \"electronica\",\n  \"precio\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "JSON mal formado (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"nombre\": \"sin cerrar\", ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error con código JSON_INVALIDO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('JSON_INVALIDO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El producto existente no cambió (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoExistenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoExistenteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Precio sigue siendo positivo', () => pm.expect(pm.response.json().data.precio).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 Seguridad: 401 y 403",
+      "item": [
+        {
+          "name": "Crear producto sin token (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Ergonómico Vega\",\n  \"descripcion\": \"Mouse inalámbrico vertical de prueba.\",\n  \"categoria\": \"electronica\",\n  \"precio\": 129900\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error con código NO_AUTENTICADO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('NO_AUTENTICADO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar favoritos sin token (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error con código NO_AUTENTICADO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('NO_AUTENTICADO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar favoritos con token vencido (401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenVencido}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            },
+            "description": "tokenVencido se genera con: npm run -s token:vencido (o automáticamente con npm run test:postman)."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get('tokenVencido')) console.warn('Falta tokenVencido: ejecuta npm run -s token:vencido y pégalo en el entorno');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error con código TOKEN_VENCIDO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('TOKEN_VENCIDO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token con firma alterada (401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const t = pm.environment.get('tokenA');",
+                  "const partes = t.split('.');",
+                  "const firma = partes[2];",
+                  "const cambiada = (firma[0] === 'A' ? 'B' : 'A') + firma.slice(1);",
+                  "pm.environment.set('tokenAlterado', `${partes[0]}.${partes[1]}.${cambiada}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error con código TOKEN_INVALIDO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('TOKEN_INVALIDO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Usuario normal intenta crear producto (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Ergonómico Vega\",\n  \"descripcion\": \"Mouse inalámbrico vertical de prueba.\",\n  \"categoria\": \"electronica\",\n  \"precio\": 129900\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Error con código PROHIBIDO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('PROHIBIDO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Usuario normal intenta actualizar producto (403)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoExistenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoExistenteId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Ergonómico Vega\",\n  \"descripcion\": \"Mouse inalámbrico vertical de prueba.\",\n  \"categoria\": \"electronica\",\n  \"precio\": 129900\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Error con código PROHIBIDO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('PROHIBIDO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Usuario normal intenta eliminar producto (403)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoExistenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoExistenteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Error con código PROHIBIDO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('PROHIBIDO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El producto sigue existiendo (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoExistenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoExistenteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 Favoritos",
+      "item": [
+        {
+          "name": "A lista favoritos vacíos (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Lista vacía', () => pm.expect(pm.response.json().data).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A agrega favorito (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": {{productoExistenteId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "const f = pm.response.json().data;",
+                  "pm.test('Pertenece a A y al producto', () => {",
+                  "  pm.expect(f.usuarioId).to.eql(Number(pm.environment.get('usuarioAId')));",
+                  "  pm.expect(f.productoId).to.eql(Number(pm.environment.get('productoExistenteId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A agrega el mismo favorito (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": {{productoExistenteId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Error con código FAVORITO_DUPLICADO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('FAVORITO_DUPLICADO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A agrega producto inexistente (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": 999999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A agrega sin productoId válido (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A lista favoritos (200, contiene el producto)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Un favorito con datos del producto', () => {",
+                  "  pm.expect(j.total).to.eql(1);",
+                  "  pm.expect(j.data[0].producto.id).to.eql(Number(pm.environment.get('productoExistenteId')));",
+                  "  pm.expect(j.data[0].producto).to.include.keys('nombre','precio','categoria');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A quita el favorito (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos/{{productoExistenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos",
+                "{{productoExistenteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A quita un favorito que ya no tiene (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos/{{productoExistenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos",
+                "{{productoExistenteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error con código FAVORITO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('FAVORITO_NO_ENCONTRADO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A lista favoritos después de quitar (200, vacío)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Lista vacía', () => pm.expect(pm.response.json().total).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 Aislamiento entre usuarios A y B",
+      "item": [
+        {
+          "name": "A agrega favorito (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": {{productoExistenteId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B intenta agregar a nombre de A enviando usuarioId (se ignora)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            },
+            "description": "El servidor toma la identidad del token: el favorito queda para B, no para A.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": {{productoExistenteId}},\n  \"usuarioId\": {{usuarioAId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('El favorito se creó para B, no para A', () => {",
+                  "  pm.expect(pm.response.json().data.usuarioId).to.eql(Number(pm.environment.get('usuarioBId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B quita su propio favorito (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos/{{productoExistenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos",
+                "{{productoExistenteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B lista favoritos: no ve los de A (200, vacío)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('B no ve favoritos de A', () => pm.expect(pm.response.json().data).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B intenta quitar el favorito de A (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos/{{productoExistenteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos",
+                "{{productoExistenteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error con código FAVORITO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.error.codigo).to.eql('FAVORITO_NO_ENCONTRADO');",
+                  "  pm.expect(j.error.mensaje).to.be.a('string');",
+                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B intenta quitarlo con ?usuarioId de A (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos/{{productoExistenteId}}?usuarioId={{usuarioAId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos",
+                "{{productoExistenteId}}"
+              ],
+              "query": [
+                {
+                  "key": "usuarioId",
+                  "value": "{{usuarioAId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El favorito de A permanece (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('A sigue teniendo su favorito', () => {",
+                  "  pm.expect(j.total).to.eql(1);",
+                  "  pm.expect(j.data[0].producto.id).to.eql(Number(pm.environment.get('productoExistenteId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 Consistencia al eliminar un producto",
+      "item": [
+        {
+          "name": "Admin crea producto temporal (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Producto temporal\",\n  \"descripcion\": \"Se eliminará en la prueba.\",\n  \"categoria\": \"pruebas\",\n  \"precio\": 1000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('productoTempId', pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A lo agrega a favoritos (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": {{productoTempId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin elimina el producto (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoTempId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoTempId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El favorito desapareció (ON DELETE CASCADE)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('No quedan favoritos apuntando al producto eliminado', () => {",
+                  "  const ids = pm.response.json().data.map(f => f.producto.id);",
+                  "  pm.expect(ids).to.not.include(Number(pm.environment.get('productoTempId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 Persistencia - antes de reiniciar",
+      "item": [
+        {
+          "name": "Admin crea producto de persistencia (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Producto de persistencia\",\n  \"descripcion\": \"Debe seguir existiendo tras reiniciar Node.js.\",\n  \"categoria\": \"pruebas\",\n  \"precio\": 12345.67\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('productoPersistenciaId', pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A lo agrega a favoritos (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": {{productoPersistenciaId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10 Persistencia - después de reiniciar",
+      "description": "Detén el servidor (Ctrl+C), vuelve a iniciarlo con npm start y ejecuta solo esta carpeta.",
+      "item": [
+        {
+          "name": "El servidor responde de nuevo (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/salud",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "salud"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A inicia sesión de nuevo (200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoA}}\",\n  \"password\": \"{{passwordUsuarios}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.set('tokenA', pm.response.json().data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El producto sigue existiendo (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoPersistenciaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoPersistenciaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "const p = pm.response.json().data;",
+                  "pm.test('Mismos datos', () => { pm.expect(p.nombre).to.eql('Producto de persistencia'); pm.expect(p.precio).to.eql(12345.67); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Los favoritos de A siguen ahí (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Contiene el producto de persistencia', () => {",
+                  "  const ids = pm.response.json().data.map(f => f.producto.id);",
+                  "  pm.expect(ids).to.include(Number(pm.environment.get('productoPersistenciaId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
