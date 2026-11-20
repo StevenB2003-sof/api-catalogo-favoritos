@@ -276,7 +276,8 @@
                   "  pm.expect(t).to.not.include('password');",
                   "  pm.expect(t).to.not.include('$2');",
                   "});",
-                  "pm.environment.set('tokenA', d.token);"
+                  "pm.environment.set('tokenA', d.token);",
+                  "pm.environment.set('usuarioAId', d.usuario.id);"
                 ]
               }
             }
@@ -319,7 +320,9 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.environment.set('tokenB', pm.response.json().data.token);"
+                  "const d = pm.response.json().data;",
+                  "pm.environment.set('tokenB', d.token);",
+                  "pm.environment.set('usuarioBId', d.usuario.id);"
                 ]
               }
             }
@@ -1420,7 +1423,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (!pm.environment.get('tokenVencido')) console.warn('Falta tokenVencido: ejecuta npm run -s token:vencido y pégalo en el entorno');"
+                  "if (!pm.environment.get('tokenVencido')) throw new Error('Falta tokenVencido: ejecuta npm run -s token:vencido y pega el resultado en el entorno');"
                 ]
               }
             },
