@@ -45,8 +45,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.environment.set('correoA', `usuario.a.${Date.now()}@catalogo.test`);",
-                  "if (!pm.environment.get('passwordUsuarios')) pm.environment.set('passwordUsuarios', 'ClaveDePrueba123');"
+                  "{",
+                  "  pm.environment.set('correoA', `usuario.a.${Date.now()}@catalogo.test`);",
+                  "  if (!pm.environment.get('passwordUsuarios')) pm.environment.set('passwordUsuarios', 'ClaveDePrueba123');",
+                  "}"
                 ]
               }
             },
@@ -55,16 +57,18 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
-                  "const u = pm.response.json().data;",
-                  "pm.test('Rol asignado es usuario aunque se pidió admin', () => pm.expect(u.rol).to.eql('usuario'));",
-                  "pm.test('Correo correcto', () => pm.expect(u.correo).to.eql(pm.environment.get('correoA')));",
-                  "pm.test('No expone contraseña ni hash', () => {",
-                  "  const t = pm.response.text();",
-                  "  pm.expect(t).to.not.include('password');",
-                  "  pm.expect(t).to.not.include('$2');",
-                  "});",
-                  "pm.environment.set('usuarioAId', u.id);"
+                  "{",
+                  "  pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "  const u = pm.response.json().data;",
+                  "  pm.test('Rol asignado es usuario aunque se pidió admin', () => pm.expect(u.rol).to.eql('usuario'));",
+                  "  pm.test('Correo correcto', () => pm.expect(u.correo).to.eql(pm.environment.get('correoA')));",
+                  "  pm.test('No expone contraseña ni hash', () => {",
+                  "    const t = pm.response.text();",
+                  "    pm.expect(t).to.not.include('password');",
+                  "    pm.expect(t).to.not.include('$2');",
+                  "  });",
+                  "  pm.environment.set('usuarioAId', u.id);",
+                  "}"
                 ]
               }
             }
@@ -106,7 +110,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.environment.set('correoB', `usuario.b.${Date.now()}@catalogo.test`);"
+                  "{",
+                  "  pm.environment.set('correoB', `usuario.b.${Date.now()}@catalogo.test`);",
+                  "}"
                 ]
               }
             },
@@ -115,13 +121,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
-                  "pm.environment.set('usuarioBId', pm.response.json().data.id);",
-                  "pm.test('No expone contraseña ni hash', () => {",
-                  "  const t = pm.response.text();",
-                  "  pm.expect(t).to.not.include('password');",
-                  "  pm.expect(t).to.not.include('$2');",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "  pm.environment.set('usuarioBId', pm.response.json().data.id);",
+                  "  pm.test('No expone contraseña ni hash', () => {",
+                  "    const t = pm.response.text();",
+                  "    pm.expect(t).to.not.include('password');",
+                  "    pm.expect(t).to.not.include('$2');",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -163,13 +171,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 409', () => pm.response.to.have.status(409));",
-                  "pm.test('Error con código CORREO_DUPLICADO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('CORREO_DUPLICADO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 409', () => pm.response.to.have.status(409));",
+                  "  pm.test('Error con código CORREO_DUPLICADO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('CORREO_DUPLICADO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -211,17 +221,19 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
-                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});",
-                  "pm.test('Indica los tres campos con error', () => {",
-                  "  const campos = pm.response.json().error.detalles.map(d => d.campo);",
-                  "  pm.expect(campos).to.include.members(['nombre','correo','password']);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "  pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "  pm.test('Indica los tres campos con error', () => {",
+                  "    const campos = pm.response.json().error.detalles.map(d => d.campo);",
+                  "    pm.expect(campos).to.include.members(['nombre','correo','password']);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -263,21 +275,23 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "const d = pm.response.json().data;",
-                  "pm.test('Devuelve token JWT con vencimiento', () => {",
-                  "  pm.expect(d.token.split('.')).to.have.lengthOf(3);",
-                  "  const payload = JSON.parse(atob(d.token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));",
-                  "  pm.expect(payload.exp).to.be.above(payload.iat);",
-                  "  pm.expect(payload.rol).to.eql('usuario');",
-                  "});",
-                  "pm.test('No expone contraseña ni hash', () => {",
-                  "  const t = pm.response.text();",
-                  "  pm.expect(t).to.not.include('password');",
-                  "  pm.expect(t).to.not.include('$2');",
-                  "});",
-                  "pm.environment.set('tokenA', d.token);",
-                  "pm.environment.set('usuarioAId', d.usuario.id);"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  const d = pm.response.json().data;",
+                  "  pm.environment.set('tokenA', d.token);",
+                  "  pm.environment.set('usuarioAId', d.usuario.id);",
+                  "  pm.test('Devuelve token JWT con vencimiento', () => {",
+                  "    pm.expect(d.token.split('.')).to.have.lengthOf(3);",
+                  "    const payload = JSON.parse(atob(d.token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));",
+                  "    pm.expect(payload.exp).to.be.above(payload.iat);",
+                  "    pm.expect(payload.rol).to.eql('usuario');",
+                  "  });",
+                  "  pm.test('No expone contraseña ni hash', () => {",
+                  "    const t = pm.response.text();",
+                  "    pm.expect(t).to.not.include('password');",
+                  "    pm.expect(t).to.not.include('$2');",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -319,10 +333,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "const d = pm.response.json().data;",
-                  "pm.environment.set('tokenB', d.token);",
-                  "pm.environment.set('usuarioBId', d.usuario.id);"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  const d = pm.response.json().data;",
+                  "  pm.environment.set('tokenB', d.token);",
+                  "  pm.environment.set('usuarioBId', d.usuario.id);",
+                  "}"
                 ]
               }
             }
@@ -365,10 +381,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "const d = pm.response.json().data;",
-                  "pm.test('El usuario es admin', () => pm.expect(d.usuario.rol).to.eql('admin'));",
-                  "pm.environment.set('tokenAdmin', d.token);"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  const d = pm.response.json().data;",
+                  "  pm.environment.set('tokenAdmin', d.token);",
+                  "  pm.test('El usuario es admin', () => pm.expect(d.usuario.rol).to.eql('admin'));",
+                  "}"
                 ]
               }
             }
@@ -410,14 +428,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
-                  "pm.test('Error con código CREDENCIALES_INVALIDAS y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('CREDENCIALES_INVALIDAS');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});",
-                  "pm.test('No devuelve token', () => pm.expect(pm.response.json().data).to.be.undefined);"
+                  "{",
+                  "  pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "  pm.test('Error con código CREDENCIALES_INVALIDAS y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('CREDENCIALES_INVALIDAS');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "  pm.test('No devuelve token', () => pm.expect(pm.response.json().data).to.be.undefined);",
+                  "}"
                 ]
               }
             }
@@ -459,13 +479,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
-                  "pm.test('Error con código CREDENCIALES_INVALIDAS y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('CREDENCIALES_INVALIDAS');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "  pm.test('Error con código CREDENCIALES_INVALIDAS y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('CREDENCIALES_INVALIDAS');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -497,16 +519,18 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "const j = pm.response.json();",
-                  "pm.test('Al menos 5 productos', () => pm.expect(j.data.length).to.be.at.least(5));",
-                  "pm.test('total coincide', () => pm.expect(j.total).to.eql(j.data.length));",
-                  "const p = j.data[0];",
-                  "pm.test('Tiene los campos de un producto', () => {",
-                  "  pm.expect(p).to.include.keys('id','nombre','descripcion','categoria','precio');",
-                  "  pm.expect(p.precio).to.be.above(0);",
-                  "});",
-                  "pm.environment.set('productoExistenteId', p.id);"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  const j = pm.response.json();",
+                  "  const p = j.data[0];",
+                  "  pm.environment.set('productoExistenteId', p.id);",
+                  "  pm.test('Al menos 5 productos', () => pm.expect(j.data.length).to.be.at.least(5));",
+                  "  pm.test('total coincide', () => pm.expect(j.total).to.eql(j.data.length));",
+                  "  pm.test('Tiene los campos de un producto', () => {",
+                  "    pm.expect(p).to.include.keys('id','nombre','descripcion','categoria','precio');",
+                  "    pm.expect(p.precio).to.be.above(0);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -539,10 +563,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "const j = pm.response.json();",
-                  "pm.test('Hay resultados', () => pm.expect(j.data.length).to.be.above(0));",
-                  "pm.test('Todos son de la categoría libros', () => j.data.forEach(p => pm.expect(p.categoria).to.eql('libros')));"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  const j = pm.response.json();",
+                  "  pm.test('Hay resultados', () => pm.expect(j.data.length).to.be.above(0));",
+                  "  pm.test('Todos son de la categoría libros', () => j.data.forEach(p => pm.expect(p.categoria).to.eql('libros')));",
+                  "}"
                 ]
               }
             }
@@ -575,8 +601,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Lista vacía', () => pm.expect(pm.response.json().data).to.eql([]));"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  pm.test('Lista vacía', () => pm.expect(pm.response.json().data).to.eql([]));",
+                  "}"
                 ]
               }
             }
@@ -604,13 +632,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "const p = pm.response.json().data;",
-                  "pm.test('Tiene los campos de un producto', () => {",
-                  "  pm.expect(p).to.include.keys('id','nombre','descripcion','categoria','precio');",
-                  "  pm.expect(p.precio).to.be.above(0);",
-                  "});",
-                  "pm.test('Es el id pedido', () => pm.expect(p.id).to.eql(Number(pm.environment.get('productoExistenteId'))));"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  const p = pm.response.json().data;",
+                  "  pm.test('Tiene los campos de un producto', () => {",
+                  "    pm.expect(p).to.include.keys('id','nombre','descripcion','categoria','precio');",
+                  "    pm.expect(p.precio).to.be.above(0);",
+                  "  });",
+                  "  pm.test('Es el id pedido', () => pm.expect(p.id).to.eql(Number(pm.environment.get('productoExistenteId'))));",
+                  "}"
                 ]
               }
             }
@@ -638,13 +668,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
-                  "pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "  pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -672,13 +704,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 400', () => pm.response.to.have.status(400));",
-                  "pm.test('Error con código ID_INVALIDO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('ID_INVALIDO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 400', () => pm.response.to.have.status(400));",
+                  "  pm.test('Error con código ID_INVALIDO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('ID_INVALIDO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -728,14 +762,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
-                  "const p = pm.response.json().data;",
-                  "pm.test('Tiene los campos de un producto', () => {",
-                  "  pm.expect(p).to.include.keys('id','nombre','descripcion','categoria','precio');",
-                  "  pm.expect(p.precio).to.be.above(0);",
-                  "});",
-                  "pm.test('Guarda los datos enviados', () => { pm.expect(p.nombre).to.eql('Mouse Ergonómico Vega'); pm.expect(p.precio).to.eql(129900); });",
-                  "pm.environment.set('productoCrudId', p.id);"
+                  "{",
+                  "  pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "  const p = pm.response.json().data;",
+                  "  pm.test('Tiene los campos de un producto', () => {",
+                  "    pm.expect(p).to.include.keys('id','nombre','descripcion','categoria','precio');",
+                  "    pm.expect(p.precio).to.be.above(0);",
+                  "  });",
+                  "  pm.test('Guarda los datos enviados', () => { pm.expect(p.nombre).to.eql('Mouse Ergonómico Vega'); pm.expect(p.precio).to.eql(129900); });",
+                  "  pm.environment.set('productoCrudId', p.id);",
+                  "}"
                 ]
               }
             }
@@ -763,8 +799,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Mismo nombre', () => pm.expect(pm.response.json().data.nombre).to.eql('Mouse Ergonómico Vega'));"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  pm.test('Mismo nombre', () => pm.expect(pm.response.json().data.nombre).to.eql('Mouse Ergonómico Vega'));",
+                  "}"
                 ]
               }
             }
@@ -810,9 +848,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "const p = pm.response.json().data;",
-                  "pm.test('Cambios aplicados', () => { pm.expect(p.nombre).to.eql('Mouse Ergonómico Vega Pro'); pm.expect(p.precio).to.eql(149900.5); });"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  const p = pm.response.json().data;",
+                  "  pm.test('Cambios aplicados', () => { pm.expect(p.nombre).to.eql('Mouse Ergonómico Vega Pro'); pm.expect(p.precio).to.eql(149900.5); });",
+                  "}"
                 ]
               }
             }
@@ -858,13 +898,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
-                  "pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "  pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -897,8 +939,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));",
-                  "pm.test('Sin cuerpo', () => pm.expect(pm.response.text()).to.eql(''));"
+                  "{",
+                  "  pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));",
+                  "  pm.test('Sin cuerpo', () => pm.expect(pm.response.text()).to.eql(''));",
+                  "}"
                 ]
               }
             }
@@ -926,13 +970,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
-                  "pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "  pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -965,7 +1011,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));"
+                  "{",
+                  "  pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "}"
                 ]
               }
             }
@@ -1015,14 +1063,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
-                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});",
-                  "pm.test('El error es del precio', () => pm.expect(pm.response.json().error.detalles[0].campo).to.eql('precio'));"
+                  "{",
+                  "  pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "  pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "  pm.test('El error es del precio', () => pm.expect(pm.response.json().error.detalles[0].campo).to.eql('precio'));",
+                  "}"
                 ]
               }
             }
@@ -1067,13 +1117,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
-                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "  pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1118,13 +1170,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
-                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "  pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1169,17 +1223,19 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
-                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});",
-                  "pm.test('Reporta los 4 campos', () => {",
-                  "  const campos = pm.response.json().error.detalles.map(d => d.campo);",
-                  "  pm.expect(campos).to.have.members(['nombre','descripcion','categoria','precio']);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "  pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "  pm.test('Reporta los 4 campos', () => {",
+                  "    const campos = pm.response.json().error.detalles.map(d => d.campo);",
+                  "    pm.expect(campos).to.have.members(['nombre','descripcion','categoria','precio']);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1225,7 +1281,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));"
+                  "{",
+                  "  pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "}"
                 ]
               }
             }
@@ -1270,13 +1328,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 400', () => pm.response.to.have.status(400));",
-                  "pm.test('Error con código JSON_INVALIDO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('JSON_INVALIDO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 400', () => pm.response.to.have.status(400));",
+                  "  pm.test('Error con código JSON_INVALIDO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('JSON_INVALIDO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1304,8 +1364,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Precio sigue siendo positivo', () => pm.expect(pm.response.json().data.precio).to.be.above(0));"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  pm.test('Precio sigue siendo positivo', () => pm.expect(pm.response.json().data.precio).to.be.above(0));",
+                  "}"
                 ]
               }
             }
@@ -1351,13 +1413,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
-                  "pm.test('Error con código NO_AUTENTICADO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('NO_AUTENTICADO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "  pm.test('Error con código NO_AUTENTICADO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('NO_AUTENTICADO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1384,13 +1448,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
-                  "pm.test('Error con código NO_AUTENTICADO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('NO_AUTENTICADO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "  pm.test('Error con código NO_AUTENTICADO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('NO_AUTENTICADO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1423,7 +1489,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (!pm.environment.get('tokenVencido')) throw new Error('Falta tokenVencido: ejecuta npm run -s token:vencido y pega el resultado en el entorno');"
+                  "{",
+                  "  if (!pm.environment.get('tokenVencido')) throw new Error('Falta tokenVencido: ejecuta npm run -s token:vencido y pega el resultado en el entorno');",
+                  "}"
                 ]
               }
             },
@@ -1432,13 +1500,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
-                  "pm.test('Error con código TOKEN_VENCIDO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('TOKEN_VENCIDO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "  pm.test('Error con código TOKEN_VENCIDO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('TOKEN_VENCIDO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1470,11 +1540,13 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const t = pm.environment.get('tokenA');",
-                  "const partes = t.split('.');",
-                  "const firma = partes[2];",
-                  "const cambiada = (firma[0] === 'A' ? 'B' : 'A') + firma.slice(1);",
-                  "pm.environment.set('tokenAlterado', `${partes[0]}.${partes[1]}.${cambiada}`);"
+                  "{",
+                  "  const t = pm.environment.get('tokenA');",
+                  "  const partes = t.split('.');",
+                  "  const firma = partes[2];",
+                  "  const cambiada = (firma[0] === 'A' ? 'B' : 'A') + firma.slice(1);",
+                  "  pm.environment.set('tokenAlterado', `${partes[0]}.${partes[1]}.${cambiada}`);",
+                  "}"
                 ]
               }
             },
@@ -1483,13 +1555,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
-                  "pm.test('Error con código TOKEN_INVALIDO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('TOKEN_INVALIDO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 401', () => pm.response.to.have.status(401));",
+                  "  pm.test('Error con código TOKEN_INVALIDO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('TOKEN_INVALIDO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1534,13 +1608,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 403', () => pm.response.to.have.status(403));",
-                  "pm.test('Error con código PROHIBIDO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('PROHIBIDO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 403', () => pm.response.to.have.status(403));",
+                  "  pm.test('Error con código PROHIBIDO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('PROHIBIDO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1586,13 +1662,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 403', () => pm.response.to.have.status(403));",
-                  "pm.test('Error con código PROHIBIDO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('PROHIBIDO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 403', () => pm.response.to.have.status(403));",
+                  "  pm.test('Error con código PROHIBIDO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('PROHIBIDO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1625,13 +1703,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 403', () => pm.response.to.have.status(403));",
-                  "pm.test('Error con código PROHIBIDO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('PROHIBIDO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 403', () => pm.response.to.have.status(403));",
+                  "  pm.test('Error con código PROHIBIDO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('PROHIBIDO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1659,7 +1739,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "}"
                 ]
               }
             }
@@ -1696,8 +1778,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Lista vacía', () => pm.expect(pm.response.json().data).to.eql([]));"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  pm.test('Lista vacía', () => pm.expect(pm.response.json().data).to.eql([]));",
+                  "}"
                 ]
               }
             }
@@ -1742,12 +1826,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
-                  "const f = pm.response.json().data;",
-                  "pm.test('Pertenece a A y al producto', () => {",
-                  "  pm.expect(f.usuarioId).to.eql(Number(pm.environment.get('usuarioAId')));",
-                  "  pm.expect(f.productoId).to.eql(Number(pm.environment.get('productoExistenteId')));",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "  const f = pm.response.json().data;",
+                  "  pm.test('Pertenece a A y al producto', () => {",
+                  "    pm.expect(f.usuarioId).to.eql(Number(pm.environment.get('usuarioAId')));",
+                  "    pm.expect(f.productoId).to.eql(Number(pm.environment.get('productoExistenteId')));",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1792,13 +1878,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 409', () => pm.response.to.have.status(409));",
-                  "pm.test('Error con código FAVORITO_DUPLICADO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('FAVORITO_DUPLICADO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 409', () => pm.response.to.have.status(409));",
+                  "  pm.test('Error con código FAVORITO_DUPLICADO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('FAVORITO_DUPLICADO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1843,13 +1931,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
-                  "pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "  pm.test('Error con código PRODUCTO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('PRODUCTO_NO_ENCONTRADO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1894,13 +1984,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
-                  "pm.test('Error con código VALIDACION y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('VALIDACION');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 422', () => pm.response.to.have.status(422));",
+                  "  pm.test('Error con código VALIDACION y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('VALIDACION');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1932,13 +2024,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "const j = pm.response.json();",
-                  "pm.test('Un favorito con datos del producto', () => {",
-                  "  pm.expect(j.total).to.eql(1);",
-                  "  pm.expect(j.data[0].producto.id).to.eql(Number(pm.environment.get('productoExistenteId')));",
-                  "  pm.expect(j.data[0].producto).to.include.keys('nombre','precio','categoria');",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  const j = pm.response.json();",
+                  "  pm.test('Un favorito con datos del producto', () => {",
+                  "    pm.expect(j.total).to.eql(1);",
+                  "    pm.expect(j.data[0].producto.id).to.eql(Number(pm.environment.get('productoExistenteId')));",
+                  "    pm.expect(j.data[0].producto).to.include.keys('nombre','precio','categoria');",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -1971,7 +2065,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));"
+                  "{",
+                  "  pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));",
+                  "}"
                 ]
               }
             }
@@ -2004,13 +2100,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
-                  "pm.test('Error con código FAVORITO_NO_ENCONTRADO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('FAVORITO_NO_ENCONTRADO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "  pm.test('Error con código FAVORITO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('FAVORITO_NO_ENCONTRADO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -2042,8 +2140,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Lista vacía', () => pm.expect(pm.response.json().total).to.eql(0));"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  pm.test('Lista vacía', () => pm.expect(pm.response.json().total).to.eql(0));",
+                  "}"
                 ]
               }
             }
@@ -2093,7 +2193,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));"
+                  "{",
+                  "  pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "}"
                 ]
               }
             }
@@ -2139,10 +2241,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
-                  "pm.test('El favorito se creó para B, no para A', () => {",
-                  "  pm.expect(pm.response.json().data.usuarioId).to.eql(Number(pm.environment.get('usuarioBId')));",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "  pm.test('El favorito se creó para B, no para A', () => {",
+                  "    pm.expect(pm.response.json().data.usuarioId).to.eql(Number(pm.environment.get('usuarioBId')));",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -2175,7 +2279,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));"
+                  "{",
+                  "  pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));",
+                  "}"
                 ]
               }
             }
@@ -2207,8 +2313,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.test('B no ve favoritos de A', () => pm.expect(pm.response.json().data).to.eql([]));"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  pm.test('B no ve favoritos de A', () => pm.expect(pm.response.json().data).to.eql([]));",
+                  "}"
                 ]
               }
             }
@@ -2241,13 +2349,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
-                  "pm.test('Error con código FAVORITO_NO_ENCONTRADO y sin detalles internos', () => {",
-                  "  const j = pm.response.json();",
-                  "  pm.expect(j.error.codigo).to.eql('FAVORITO_NO_ENCONTRADO');",
-                  "  pm.expect(j.error.mensaje).to.be.a('string');",
-                  "  pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "  pm.test('Error con código FAVORITO_NO_ENCONTRADO y sin detalles internos', () => {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.error.codigo).to.eql('FAVORITO_NO_ENCONTRADO');",
+                  "    pm.expect(j.error.mensaje).to.be.a('string');",
+                  "    pm.expect(pm.response.text()).to.not.match(/stack|password_hash|SELECT|INSERT/i);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -2286,7 +2396,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));"
+                  "{",
+                  "  pm.test('Estado HTTP 404', () => pm.response.to.have.status(404));",
+                  "}"
                 ]
               }
             }
@@ -2318,12 +2430,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "const j = pm.response.json();",
-                  "pm.test('A sigue teniendo su favorito', () => {",
-                  "  pm.expect(j.total).to.eql(1);",
-                  "  pm.expect(j.data[0].producto.id).to.eql(Number(pm.environment.get('productoExistenteId')));",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  const j = pm.response.json();",
+                  "  pm.test('A sigue teniendo su favorito', () => {",
+                  "    pm.expect(j.total).to.eql(1);",
+                  "    pm.expect(j.data[0].producto.id).to.eql(Number(pm.environment.get('productoExistenteId')));",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -2373,8 +2487,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
-                  "pm.environment.set('productoTempId', pm.response.json().data.id);"
+                  "{",
+                  "  pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "  pm.environment.set('productoTempId', pm.response.json().data.id);",
+                  "}"
                 ]
               }
             }
@@ -2419,7 +2535,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));"
+                  "{",
+                  "  pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "}"
                 ]
               }
             }
@@ -2452,7 +2570,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));"
+                  "{",
+                  "  pm.test('Estado HTTP 204', () => pm.response.to.have.status(204));",
+                  "}"
                 ]
               }
             }
@@ -2484,11 +2604,13 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.test('No quedan favoritos apuntando al producto eliminado', () => {",
-                  "  const ids = pm.response.json().data.map(f => f.producto.id);",
-                  "  pm.expect(ids).to.not.include(Number(pm.environment.get('productoTempId')));",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  pm.test('No quedan favoritos apuntando al producto eliminado', () => {",
+                  "    const ids = pm.response.json().data.map(f => f.producto.id);",
+                  "    pm.expect(ids).to.not.include(Number(pm.environment.get('productoTempId')));",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -2538,8 +2660,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
-                  "pm.environment.set('productoPersistenciaId', pm.response.json().data.id);"
+                  "{",
+                  "  pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "  pm.environment.set('productoPersistenciaId', pm.response.json().data.id);",
+                  "}"
                 ]
               }
             }
@@ -2584,7 +2708,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));"
+                  "{",
+                  "  pm.test('Estado HTTP 201', () => pm.response.to.have.status(201));",
+                  "}"
                 ]
               }
             }
@@ -2617,7 +2743,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "}"
                 ]
               }
             }
@@ -2659,8 +2787,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.environment.set('tokenA', pm.response.json().data.token);"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  pm.environment.set('tokenA', pm.response.json().data.token);",
+                  "}"
                 ]
               }
             }
@@ -2688,9 +2818,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "const p = pm.response.json().data;",
-                  "pm.test('Mismos datos', () => { pm.expect(p.nombre).to.eql('Producto de persistencia'); pm.expect(p.precio).to.eql(12345.67); });"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  const p = pm.response.json().data;",
+                  "  pm.test('Mismos datos', () => { pm.expect(p.nombre).to.eql('Producto de persistencia'); pm.expect(p.precio).to.eql(12345.67); });",
+                  "}"
                 ]
               }
             }
@@ -2722,11 +2854,13 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Contiene el producto de persistencia', () => {",
-                  "  const ids = pm.response.json().data.map(f => f.producto.id);",
-                  "  pm.expect(ids).to.include(Number(pm.environment.get('productoPersistenciaId')));",
-                  "});"
+                  "{",
+                  "  pm.test('Estado HTTP 200', () => pm.response.to.have.status(200));",
+                  "  pm.test('Contiene el producto de persistencia', () => {",
+                  "    const ids = pm.response.json().data.map(f => f.producto.id);",
+                  "    pm.expect(ids).to.include(Number(pm.environment.get('productoPersistenciaId')));",
+                  "  });",
+                  "}"
                 ]
               }
             }
